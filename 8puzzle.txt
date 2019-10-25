@@ -1,0 +1,747 @@
+GRAPHBEAN.JAVA
+
+import java.util.Arrays;
+
+public class GraphBean {
+	//int startState[][] = { { 1, 8, 3 }, { 6, 0, 7 }, { 4, 2, 5 } };
+	//int goalState[][] = { { 1, 2, 3 }, { 8, 0, 4 }, { 7, 6, 5 } };
+	int state[][];
+	int hn ;		//heuristic
+	int gn;		//depth
+	int fn;		//total cost function h+g
+	public GraphBean() {
+		this.hn = 0;
+		this.gn = 0;
+		this.fn = 0;
+	}
+
+	int step = 0;
+	
+	@Override
+	public String toString() {
+		//return "GraphBean [startState=" + Arrays.toString(startState) + ", goalState=" + Arrays.toString(goalState)
+			//	+ "]";
+		String str = new  String("");
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				str += ("\t" + state[i][j]);
+			}
+			str += "\n";
+		}
+		return str;
+	}
+}
+
+
+CREATEGRAPH.JAVA
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Scanner;
+
+public class CreateGraph {
+	ArrayList<GraphBean> graphQueue = new ArrayList<GraphBean>();
+	GraphBean goalState = new GraphBean();
+	Scanner scan = new Scanner(System.in);
+
+	public int[][] acceptGraph() {
+		int g[][] = new int[3][3];
+		// TODO Auto-generated method stub
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				g[i][j] = scan.nextInt();
+			}
+		}
+		return g;
+	}
+
+	public void acceptData() {
+		GraphBean graphBean = new GraphBean();
+		System.out.println("Start State : ");
+		graphBean.state = acceptGraph();
+		System.out.println("Goal State : ");
+		goalState.state = acceptGraph();
+		graphQueue.add(graphBean);
+		
+		System.out.print("\nStart State : \n"+graphBean.toString());
+		System.out.print("\nGoal State : \n"+goalState.toString());
+	}
+
+	public void algorithm() {
+		AStarAlgorithm a = new AStarAlgorithm();
+		a.algorithmInitiate(graphQueue,goalState);
+	}
+
+}
+
+
+ASTARALGORITHM.JAVA
+
+
+import java.util.ArrayList;
+import java.util.concurrent.SynchronousQueue;
+
+public class AStarAlgorithm {
+	ArrayList<GraphBean> graphQueue = new ArrayList<GraphBean>();
+	GraphBean goalState = new GraphBean();
+	int heuristicValues[] = new int[4];
+	int step;
+
+	public void algorithmInitiate(ArrayList<GraphBean> gq, GraphBean gs) {
+		// TODO Auto-generated method stub
+		graphQueue = gq;
+		goalState = gs;
+		int i = 1;
+		while (!goalStateReached()) { // Till goal state not reached
+			System.out.println("\n*********** iteration " + i + " ***********");
+			algorithmStep(i);
+			i++;
+		}
+	}
+
+	public boolean goalStateReached() {
+		GraphBean gb = new GraphBean();
+		gb = graphQueue.get(graphQueue.size()-1);	
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				if (gb.state[i][j] != goalState.state[i][j])
+					return false;
+			}
+		}
+		// TODO Auto-generated method stub
+		return true;
+	}
+
+	public int[][] moveLeft(int g[][]) {
+		int temp;
+		int flag = 0;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				if (g[i][j] == 0 && j != 0) {
+					temp = g[i][j];
+					g[i][j] = g[i][j - 1];
+					g[i][j - 1] = temp;
+					flag = 1;
+					break;
+				}
+			}
+			if (flag == 1)
+				break;
+		}
+		return g;
+	}
+
+	public int[][] moveRight(int g[][]) {
+		int temp;
+		int flag = 0;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				if (g[i][j] == 0 && j != 2) {
+					temp = g[i][j];
+					g[i][j] = g[i][j + 1];
+					g[i][j + 1] = temp;
+					flag = 1;
+					break;
+				}
+			}
+			if (flag == 1)
+				break;
+		}
+		return g;
+	}
+
+	public int[][] moveUp(int g[][]) {
+		int temp;
+		int flag = 0;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				if (g[i][j] == 0 && i != 0) {
+					temp = g[i][j];
+					g[i][j] = g[i - 1][j];
+					g[i - 1][j] = temp;
+					flag = 1;
+					break;
+				}
+			}
+			if (flag == 1)
+				break;
+		}
+		return g;
+	}
+
+	public int[][] moveDown(int g[][]) {
+		int temp;
+		int flag = 0;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				if (g[i][j] == 0 && i != 2) {
+					temp = g[i][j];
+					g[i][j] = g[i + 1][j];
+					g[i + 1][j] = temp;
+					flag = 1;
+					break;
+				}
+			}
+			if (flag == 1)
+				break;
+		}
+		return g;
+	}
+
+	// Here
+	public int[][] initializeTempGraph() {
+		int g[][] = { { 1, 8, 3 }, { 6, 0, 7 }, { 4, 2, 5 } };// dummy assignments
+
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				g[i][j] = graphQueue.get(0).state[i][j];
+			}
+		}
+		return g;
+	}
+
+	public int heuristicFunction(int g[][]) {
+		int count = 0;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				if (g[i][j] != goalState.state[i][j] && g[i][j]!=0)
+					count++;
+			}
+		}
+		return count;
+	}
+
+	public void algorithmStep(int s) { // step is g(x)
+		int g[][] = {};
+		step = s; // initialize step i.e. g(x)
+		g = initializeTempGraph();
+		g = moveLeft(g);
+		heuristicValues[0] = heuristicFunction(g);
+		displayIteration(g);
+
+		g = initializeTempGraph();
+		g = moveRight(g);
+		heuristicValues[1] = heuristicFunction(g);
+		displayIteration(g);
+
+		g = initializeTempGraph();
+		g = moveUp(g);
+		heuristicValues[2] = heuristicFunction(g);
+		displayIteration(g);
+
+		g = initializeTempGraph();
+		g = moveDown(g);
+		heuristicValues[3] = heuristicFunction(g);
+		displayIteration(g);
+		
+		int min = 0;
+		// Finding the minimum heuristic value; L/R/U/D order
+		for (int i = 0; i < 4; i++) {
+			if (heuristicValues[min] > heuristicValues[i])
+				min = i;
+		}
+
+		if (min == 0)
+			g = moveLeft(graphQueue.get(0).state);
+		else if (min == 1)
+			g = moveRight(graphQueue.get(0).state);
+		else if (min == 2)
+			g = moveUp(graphQueue.get(0).state);
+		else if (min == 3)
+			g = moveDown(graphQueue.get(0).state);
+
+		// add the current graph to to the queue and move to next level
+		System.out.print("\n\n------------->>SELECTED PUZZLE : \n");
+		graphQueue.add(displayIteration(g));
+
+	}
+	public GraphBean displayIteration(int[][] g) {
+
+		GraphBean gb = new GraphBean();
+		gb.state = g;
+		gb.hn = heuristicFunction(g);
+		gb.gn = step;
+		gb.fn = gb.gn + gb.hn;
+		System.out.print("\nPuzzle : \n" + gb.toString());
+		System.out.print("\nf(n) = "+gb.fn+"\t,h(n) = "+gb.hn+"\t,g(n) = "+gb.gn);
+		return gb;
+	}
+}
+
+
+
+INITIATEALGORITHM.JAVA
+
+
+public class InitiateAlgorithm {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		CreateGraph createGraph = new CreateGraph();
+		int i=0;
+		createGraph.acceptData();
+		createGraph.algorithm();
+	}
+}
+/*
+--->>input
+Start State : 
+0	1	3
+4	2	5
+7	8	6
+Goal State : 
+1	2	3
+4	5	6
+7	8	0
+*/
+/*
+--->>Output
+Start State : 
+0	1	3
+4	2	5
+7	8	6
+Goal State : 
+1	2	3
+4	5	6
+7	8	0
+
+Start State : 
+	0	1	3
+	4	2	5
+	7	8	6
+
+Goal State : 
+	1	2	3
+	4	5	6
+	7	8	0
+
+*********** iteration 1 ***********
+
+Puzzle : 
+	1	0	3
+	4	2	5
+	7	8	6
+
+f(n) = 4	,h(n) = 3	,g(n) = 1
+*********** iteration 2 ***********
+
+Puzzle : 
+	1	2	3
+	4	0	5
+	7	8	6
+
+f(n) = 4	,h(n) = 2	,g(n) = 2
+*********** iteration 3 ***********
+
+Puzzle : 
+	1	2	3
+	4	5	0
+	7	8	6
+
+f(n) = 4	,h(n) = 1	,g(n) = 3
+*********** iteration 4 ***********
+
+Puzzle : 
+	1	2	3
+	4	5	6
+	7	8	0
+
+f(n) = 4	,h(n) = 0	,g(n) = 4
+*/
+/*--------->> WITH ITERATION
+ * Start State : 
+0	1	3
+4	2	5
+7	8	6
+Goal State : 
+1	2	3
+4	5	6
+7	8	0
+
+Start State : 
+	0	1	3
+	4	2	5
+	7	8	6
+
+Goal State : 
+	1	2	3
+	4	5	6
+	7	8	0
+
+*********** iteration 1 ***********
+
+Puzzle : 
+	0	1	3
+	4	2	5
+	7	8	6
+
+f(n) = 5	,h(n) = 4	,g(n) = 1
+Puzzle : 
+	1	0	3
+	4	2	5
+	7	8	6
+
+f(n) = 4	,h(n) = 3	,g(n) = 1
+Puzzle : 
+	0	1	3
+	4	2	5
+	7	8	6
+
+f(n) = 5	,h(n) = 4	,g(n) = 1
+Puzzle : 
+	4	1	3
+	0	2	5
+	7	8	6
+
+f(n) = 6	,h(n) = 5	,g(n) = 1
+
+------------->>SELECTED PUZZLE : 
+
+Puzzle : 
+	1	0	3
+	4	2	5
+	7	8	6
+
+f(n) = 4	,h(n) = 3	,g(n) = 1
+*********** iteration 2 ***********
+
+Puzzle : 
+	0	1	3
+	4	2	5
+	7	8	6
+
+f(n) = 6	,h(n) = 4	,g(n) = 2
+Puzzle : 
+	1	3	0
+	4	2	5
+	7	8	6
+
+f(n) = 6	,h(n) = 4	,g(n) = 2
+Puzzle : 
+	1	0	3
+	4	2	5
+	7	8	6
+
+f(n) = 5	,h(n) = 3	,g(n) = 2
+Puzzle : 
+	1	2	3
+	4	0	5
+	7	8	6
+
+f(n) = 4	,h(n) = 2	,g(n) = 2
+
+------------->>SELECTED PUZZLE : 
+
+Puzzle : 
+	1	2	3
+	4	0	5
+	7	8	6
+
+f(n) = 4	,h(n) = 2	,g(n) = 2
+*********** iteration 3 ***********
+
+Puzzle : 
+	1	2	3
+	0	4	5
+	7	8	6
+
+f(n) = 6	,h(n) = 3	,g(n) = 3
+Puzzle : 
+	1	2	3
+	4	5	0
+	7	8	6
+
+f(n) = 4	,h(n) = 1	,g(n) = 3
+Puzzle : 
+	1	0	3
+	4	2	5
+	7	8	6
+
+f(n) = 6	,h(n) = 3	,g(n) = 3
+Puzzle : 
+	1	2	3
+	4	8	5
+	7	0	6
+
+f(n) = 6	,h(n) = 3	,g(n) = 3
+
+------------->>SELECTED PUZZLE : 
+
+Puzzle : 
+	1	2	3
+	4	5	0
+	7	8	6
+
+f(n) = 4	,h(n) = 1	,g(n) = 3
+*********** iteration 4 ***********
+
+Puzzle : 
+	1	2	3
+	4	0	5
+	7	8	6
+
+f(n) = 6	,h(n) = 2	,g(n) = 4
+Puzzle : 
+	1	2	3
+	4	5	0
+	7	8	6
+
+f(n) = 5	,h(n) = 1	,g(n) = 4
+Puzzle : 
+	1	2	0
+	4	5	3
+	7	8	6
+
+f(n) = 6	,h(n) = 2	,g(n) = 4
+Puzzle : 
+	1	2	3
+	4	5	6
+	7	8	0
+
+f(n) = 4	,h(n) = 0	,g(n) = 4
+
+------------->>SELECTED PUZZLE : 
+
+Puzzle : 
+	1	2	3
+	4	5	6
+	7	8	0
+
+f(n) = 4	,h(n) = 0	,g(n) = 4
+*/
+public class InitiateAlgorithm {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		CreateGraph createGraph = new CreateGraph();
+		int i=0;
+		createGraph.acceptData();
+		createGraph.algorithm();
+	}
+}
+/*
+--->>input
+Start State : 
+0	1	3
+4	2	5
+7	8	6
+Goal State : 
+1	2	3
+4	5	6
+7	8	0
+*/
+/*
+--->>Output
+Start State : 
+0	1	3
+4	2	5
+7	8	6
+Goal State : 
+1	2	3
+4	5	6
+7	8	0
+
+Start State : 
+	0	1	3
+	4	2	5
+	7	8	6
+
+Goal State : 
+	1	2	3
+	4	5	6
+	7	8	0
+
+*********** iteration 1 ***********
+
+Puzzle : 
+	1	0	3
+	4	2	5
+	7	8	6
+
+f(n) = 4	,h(n) = 3	,g(n) = 1
+*********** iteration 2 ***********
+
+Puzzle : 
+	1	2	3
+	4	0	5
+	7	8	6
+
+f(n) = 4	,h(n) = 2	,g(n) = 2
+*********** iteration 3 ***********
+
+Puzzle : 
+	1	2	3
+	4	5	0
+	7	8	6
+
+f(n) = 4	,h(n) = 1	,g(n) = 3
+*********** iteration 4 ***********
+
+Puzzle : 
+	1	2	3
+	4	5	6
+	7	8	0
+
+f(n) = 4	,h(n) = 0	,g(n) = 4
+*/
+/*--------->> WITH ITERATION
+ * Start State : 
+0	1	3
+4	2	5
+7	8	6
+Goal State : 
+1	2	3
+4	5	6
+7	8	0
+
+Start State : 
+	0	1	3
+	4	2	5
+	7	8	6
+
+Goal State : 
+	1	2	3
+	4	5	6
+	7	8	0
+
+*********** iteration 1 ***********
+
+Puzzle : 
+	0	1	3
+	4	2	5
+	7	8	6
+
+f(n) = 5	,h(n) = 4	,g(n) = 1
+Puzzle : 
+	1	0	3
+	4	2	5
+	7	8	6
+
+f(n) = 4	,h(n) = 3	,g(n) = 1
+Puzzle : 
+	0	1	3
+	4	2	5
+	7	8	6
+
+f(n) = 5	,h(n) = 4	,g(n) = 1
+Puzzle : 
+	4	1	3
+	0	2	5
+	7	8	6
+
+f(n) = 6	,h(n) = 5	,g(n) = 1
+
+------------->>SELECTED PUZZLE : 
+
+Puzzle : 
+	1	0	3
+	4	2	5
+	7	8	6
+
+f(n) = 4	,h(n) = 3	,g(n) = 1
+*********** iteration 2 ***********
+
+Puzzle : 
+	0	1	3
+	4	2	5
+	7	8	6
+
+f(n) = 6	,h(n) = 4	,g(n) = 2
+Puzzle : 
+	1	3	0
+	4	2	5
+	7	8	6
+
+f(n) = 6	,h(n) = 4	,g(n) = 2
+Puzzle : 
+	1	0	3
+	4	2	5
+	7	8	6
+
+f(n) = 5	,h(n) = 3	,g(n) = 2
+Puzzle : 
+	1	2	3
+	4	0	5
+	7	8	6
+
+f(n) = 4	,h(n) = 2	,g(n) = 2
+
+------------->>SELECTED PUZZLE : 
+
+Puzzle : 
+	1	2	3
+	4	0	5
+	7	8	6
+
+f(n) = 4	,h(n) = 2	,g(n) = 2
+*********** iteration 3 ***********
+
+Puzzle : 
+	1	2	3
+	0	4	5
+	7	8	6
+
+f(n) = 6	,h(n) = 3	,g(n) = 3
+Puzzle : 
+	1	2	3
+	4	5	0
+	7	8	6
+
+f(n) = 4	,h(n) = 1	,g(n) = 3
+Puzzle : 
+	1	0	3
+	4	2	5
+	7	8	6
+
+f(n) = 6	,h(n) = 3	,g(n) = 3
+Puzzle : 
+	1	2	3
+	4	8	5
+	7	0	6
+
+f(n) = 6	,h(n) = 3	,g(n) = 3
+
+------------->>SELECTED PUZZLE : 
+
+Puzzle : 
+	1	2	3
+	4	5	0
+	7	8	6
+
+f(n) = 4	,h(n) = 1	,g(n) = 3
+*********** iteration 4 ***********
+
+Puzzle : 
+	1	2	3
+	4	0	5
+	7	8	6
+
+f(n) = 6	,h(n) = 2	,g(n) = 4
+Puzzle : 
+	1	2	3
+	4	5	0
+	7	8	6
+
+f(n) = 5	,h(n) = 1	,g(n) = 4
+Puzzle : 
+	1	2	0
+	4	5	3
+	7	8	6
+
+f(n) = 6	,h(n) = 2	,g(n) = 4
+Puzzle : 
+	1	2	3
+	4	5	6
+	7	8	0
+
+f(n) = 4	,h(n) = 0	,g(n) = 4
+
+------------->>SELECTED PUZZLE : 
+
+Puzzle : 
+	1	2	3
+	4	5	6
+	7	8	0
+
+f(n) = 4	,h(n) = 0	,g(n) = 4
+*/
